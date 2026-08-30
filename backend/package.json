@@ -1,0 +1,30 @@
+{
+  "name": "edital-plano-diario-backend",
+  "version": "1.0.0",
+  "description": "Backend para o Micro-SaaS Edital → Plano Diário",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "study-schedule",
+    "concursos",
+    "saas"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.10.0",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.1.2",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
