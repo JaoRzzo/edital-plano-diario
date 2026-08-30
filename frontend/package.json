@@ -1,0 +1,17 @@
+{
+  "name": "edital-plano-diario-frontend",
+  "version": "1.0.0",
+  "description": "Frontend para o Micro-SaaS Edital → Plano Diário",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 3000 --directory public",
+    "dev": "python -m http.server 3000 --directory public"
+  },
+  "keywords": [
+    "study",
+    "schedule",
+    "concursos"
+  ],
+  "author": "",
+  "license": "MIT"
+}

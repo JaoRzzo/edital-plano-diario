@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evolução - Edital → Plano Diário</title>
+  <link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <h1>📚 Edital → Plano Diário</h1>
+      <div class="nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./today.html">Hoje</a>
+        <a href="./evolution.html">Evolução</a>
+        <button onclick="logout()">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alertContainer"></div>
+
+    <div class="card">
+      <h2>Selecione um Concurso</h2>
+      <select id="examSelect" onchange="loadExamStats()">
+        <option value="">-- Selecione um concurso --</option>
+      </select>
+    </div>
+
+    <div id="statsContainer" style="display: none;">
+      <div class="card">
+        <h2>📊 Estatísticas Gerais</h2>
+        <div id="statsContent"></div>
+      </div>
+
+      <div class="card">
+        <h2>📈 Evolução por Disciplina</h2>
+        <div id="evolutionContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const formatting = require('../js/utils.js');
+
+    if (!auth.isAuthenticated()) {
+      window.location.href = './login.html';
+    }
+
+    function showAlert(message, type = 'info') {
+      const container = document.getElementById('alertContainer');
+      const alert = document.createElement('div');
+      alert.className = `alert ${type}`;
+      alert.textContent = message;
+      container.innerHTML = '';
+      container.appendChild(alert);
+    }
+
+    function logout() {
+      auth.logout();
+    }
+
+    async function loadExams() {
+      try {
+        const exams = await api.exams.list();
+        const select = document.getElementById('examSelect');
+        
+        exams.forEach(exam => {
+          const option = document.createElement('option');
+          option.value = exam.id;
+          option.textContent = exam.name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    }
+
+    async function loadExamStats() {
+      const examId = document.getElementById('examSelect').value;
+      if (!examId) return;
+
+      try {
+        const stats = await api.questions.getStats(examId);
+        const container = document.getElementById('statsContainer');
+        const content = document.getElementById('statsContent');
+        
+        content.innerHTML = stats.map(stat => `
+          <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+            <h3>${stat.name}</h3>
+            <p><strong>Acurácia:</strong> ${stat.overall_accuracy || '0'}%</p>
+            <p><strong>Sessões:</strong> ${stat.total_sessions || 0}</p>
+            <p><strong>Total de Questões:</strong> ${stat.total_questions_done || 0}</p>
+            <p><strong>Acertos:</strong> ${stat.total_correct || 0} | <strong>Erros:</strong> ${stat.total_wrong || 0}</p>
+          </div>
+        `).join('');
+        
+        container.style.display = 'block';
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    }
+
+    loadExams();
+  </script>
+</body>
+</html>

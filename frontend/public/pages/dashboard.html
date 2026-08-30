@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Edital → Plano Diário</title>
+  <link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <h1>📚 Edital → Plano Diário</h1>
+      <p>Seu cronograma de estudos personalizado</p>
+      <div class="nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./today.html">Hoje</a>
+        <a href="./evolution.html">Evolução</a>
+        <button onclick="logout()">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="alertContainer"></div>
+
+    <div class="card">
+      <h2>Meus Concursos</h2>
+      <button onclick="showExamForm()">+ Novo Concurso</button>
+      <div id="examsList" style="margin-top: 20px;"></div>
+    </div>
+
+    <div id="examFormContainer" style="display: none;" class="card">
+      <h2>Novo Concurso</h2>
+      <form id="examForm">
+        <div class="form-group">
+          <label for="examName">Nome do Concurso</label>
+          <input type="text" id="examName" required>
+        </div>
+        <div class="form-group">
+          <label for="examDate">Data da Prova</label>
+          <input type="date" id="examDate" required>
+        </div>
+        <div class="form-group">
+          <label for="examEdital">Link do Edital (opcional)</label>
+          <input type="url" id="examEdital">
+        </div>
+        <button type="submit">Criar Concurso</button>
+        <button type="button" onclick="hideExamForm()" style="background: #ccc; color: #333;">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const formatting = require('../js/utils.js');
+
+    if (!auth.isAuthenticated()) {
+      window.location.href = './login.html';
+    }
+
+    function showAlert(message, type = 'info') {
+      const container = document.getElementById('alertContainer');
+      const alert = document.createElement('div');
+      alert.className = `alert ${type}`;
+      alert.textContent = message;
+      container.innerHTML = '';
+      container.appendChild(alert);
+    }
+
+    function logout() {
+      auth.logout();
+    }
+
+    function showExamForm() {
+      document.getElementById('examFormContainer').style.display = 'block';
+    }
+
+    function hideExamForm() {
+      document.getElementById('examFormContainer').style.display = 'none';
+      document.getElementById('examForm').reset();
+    }
+
+    async function loadExams() {
+      try {
+        const exams = await api.exams.list();
+        const examsList = document.getElementById('examsList');
+        
+        if (exams.length === 0) {
+          examsList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum concurso cadastrado</p>';
+          return;
+        }
+
+        examsList.innerHTML = exams.map(exam => `
+          <div class="card" style="margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <div>
+                <h3>${exam.name}</h3>
+                <p>📅 ${formatting.formatDate(exam.exam_date)}</p>
+              </div>
+              <div class="task-actions">
+                <button class="btn-small" onclick="goToExam('${exam.id}')">Abrir</button>
+                <button class="btn-small" onclick="deleteExam('${exam.id}')" style="background: #f44336;">Deletar</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    }
+
+    function goToExam(examId) {
+      window.location.href = `./exam-setup.html?id=${examId}`;
+    }
+
+    async function deleteExam(examId) {
+      if (!confirm('Tem certeza que deseja deletar este concurso?')) return;
+      try {
+        await api.exams.delete(examId);
+        showAlert('Concurso deletado com sucesso', 'success');
+        loadExams();
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    }
+
+    document.getElementById('examForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('examName').value;
+      const exam_date = document.getElementById('examDate').value;
+      const edital_url = document.getElementById('examEdital').value || null;
+
+      try {
+        await api.exams.create({ name, exam_date, edital_url });
+        showAlert('Concurso criado com sucesso!', 'success');
+        hideExamForm();
+        loadExams();
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    });
+
+    loadExams();
+  </script>
+</body>
+</html>
